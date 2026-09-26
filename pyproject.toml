@@ -1,0 +1,45 @@
+[project]
+name = "mes-ai"
+version = "0.1.0"
+description = "Open Manufacturing Execution System (MES) with FactoryTalk-equivalent scope, built on open standards (ISA-95, ISA-88, OPC UA, MQTT/Sparkplug B, B2MML)."
+readme = "README.md"
+authors = [
+    { name = "Shreyas Desai", email = "shreyas24desai@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi[standard]>=0.162.0",
+    "pydantic>=2.14.1",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "alembic>=1.14.0",
+    "asyncpg>=0.30.0",
+]
+
+[project.optional-dependencies]
+edge = [
+    "asyncua>=1.1.5",
+    "paho-mqtt>=2.1.0",
+]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "aiosqlite>=0.20.0",
+    "httpx>=0.28.0",
+]
+
+[project.scripts]
+mes-core = "mes_core.main:run"
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# Three top-level packages live under src/ (modular monolith + edge + simulator).
+module-name = ["mes_core", "edge_gateway", "simulator"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
