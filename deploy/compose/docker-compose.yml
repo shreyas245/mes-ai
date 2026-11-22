@@ -1,0 +1,51 @@
+name: mes
+
+services:
+  postgres:
+    image: timescale/timescaledb:2.17.2-pg17
+    environment:
+      POSTGRES_USER: mes
+      POSTGRES_PASSWORD: mes
+      POSTGRES_DB: mes
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mes"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js"]           # enable JetStream
+    ports: ["4222:4222", "8222:8222"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports: ["8080:8080"]
+
+  mes-core:
+    build:
+      context: ../..
+      dockerfile: deploy/compose/Dockerfile
+    environment:
+      MES_ENVIRONMENT: dev
+      MES_DATABASE_URL: postgresql+asyncpg://mes:mes@postgres:5432/mes
+      MES_NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+    ports: ["8000:8000"]
+
+volumes:
+  pgdata:
